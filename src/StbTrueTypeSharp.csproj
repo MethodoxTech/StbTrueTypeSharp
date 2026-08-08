@@ -1,15 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <Authors>StbTrueTypeSharpTeam</Authors>
-        <Product>StbTrueTypeSharp</Product>
-        <TargetFrameworks>netstandard2.0;net471</TargetFrameworks>
-        <Description>C# port of stb_truetype.h</Description>
-        <PackageLicense>https://github.com/rds1983/StbSharp#license</PackageLicense>
-        <PackageProjectUrl>https://github.com/rds1983/StbSharp</PackageProjectUrl>
-        <Version>1.26.12</Version>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    </PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net8.0</TargetFrameworks>
+    <Description>C# port of stb_truetype.h</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>StbTrueTypeSharp</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <IsAotCompatible>true</IsAotCompatible>
+    <VerifyReferenceAotCompatibility>true</VerifyReferenceAotCompatibility>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
 </Project>

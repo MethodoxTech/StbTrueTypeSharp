@@ -2,14 +2,14 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using NUnit.Framework;
 using StbTrueTypeSharp.Tests.Utility;
 using static StbTrueTypeSharp.StbTrueType;
+using Xunit;
+using Xunit.Sdk;
 using FontsList = System.Collections.Generic.List<StbTrueTypeSharp.StbTrueType.stbtt_fontinfo>;
 
 namespace StbTrueTypeSharp.Tests
 {
-	[TestFixture]
 	public unsafe class Tests
 	{
 		private static readonly Assembly _assembly = typeof(Tests).Assembly;
@@ -17,7 +17,7 @@ namespace StbTrueTypeSharp.Tests
 		/// <summary>
 		///     Makes sure Exception is thrown if font file lacks index map
 		/// </summary>
-		[Test]
+		[Fact]
 		public void TestNoIndexMap()
 		{
 			var ttfData = File.ReadAllBytes(@"C:\Windows\Fonts\webdings.ttf");
@@ -27,18 +27,18 @@ namespace StbTrueTypeSharp.Tests
 			});
 		}
 
-		[Test]
+		[Fact]
 		public void TestCreationAndDispose()
 		{
 			var ttfData = _assembly.ReadResourceAsBytes("DroidSans.ttf");
 			var fontInfo = CreateFont(ttfData, 0);
 			Assert.NotNull(fontInfo);
-			Assert.IsTrue(fontInfo.isDataCopy);
+			Assert.True(fontInfo.isDataCopy);
 			fontInfo.Dispose();
-			Assert.IsTrue(fontInfo.data == null);
+			Assert.True(fontInfo.data == null);
 		}
 
-		[Test]
+		[Fact]
 		public unsafe void TestLoadFontCollection()
 		{
 			string fontsPath = Environment.GetFolderPath(Environment.SpecialFolder.Fonts);
@@ -53,7 +53,7 @@ namespace StbTrueTypeSharp.Tests
 			}).FirstOrDefault();
 
 			if (someTtcPath == null)
-				Assert.Inconclusive("You don't have a ttc font installed on your computer, but this test requires it.");
+				throw new SkipException("You don't have a ttc font installed on your computer, but this test requires it.");
 
 			byte[] ttcContent = File.ReadAllBytes(someTtcPath);
 			// Assert.NotNull(someTtc);
@@ -71,7 +71,7 @@ namespace StbTrueTypeSharp.Tests
 				}
 			}
 
-			Assert.AreEqual(numberOfFonts, fonts.Count);
+			Assert.Equal(numberOfFonts, fonts.Count);
 		}
 
 		private void TestRasterize(stbtt_fontinfo fontInfo, string text, float size)
@@ -86,7 +86,7 @@ namespace StbTrueTypeSharp.Tests
 
 			var lineHeight = ascent - descent + lineGap;
 
-			Assert.IsTrue(lineHeight.EpsilonEquals(32.0f));
+			Assert.True(lineHeight.EpsilonEquals(32.0f));
 
 			for (var i = 0; i < text.Length; ++i)
 			{
@@ -98,7 +98,7 @@ namespace StbTrueTypeSharp.Tests
 				}
 
 				var glyphId = stbtt_FindGlyphIndex(fontInfo, c);
-				Assert.NotZero(glyphId);
+				Assert.NotEqual(0, glyphId);
 
 				int advanceWidth, leftSideBearing;
 				stbtt_GetGlyphHMetrics(fontInfo, glyphId, &advanceWidth, &leftSideBearing);
@@ -109,8 +109,8 @@ namespace StbTrueTypeSharp.Tests
 				var width = x1 - x0;
 				var height = y1 - y0;
 
-				Assert.NotZero(width);
-				Assert.NotZero(height);
+				Assert.NotEqual(0, width);
+				Assert.NotEqual(0, height);
 				var data = new byte[width * height];
 
 				fixed (byte* ptr = data)
@@ -120,38 +120,38 @@ namespace StbTrueTypeSharp.Tests
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void TestNewRasterizer()
 		{
 			var ttfData = _assembly.ReadResourceAsBytes("DroidSans.ttf");
 			var fontInfo = CreateFont(ttfData, 0);
 			Assert.NotNull(fontInfo);
-			Assert.IsTrue(fontInfo.isDataCopy);
+			Assert.True(fontInfo.isDataCopy);
 
 			TestRasterize(fontInfo, "Hello, World!", 32.0f);
 
-			Assert.IsFalse(usedOldRasterizer);
+			Assert.False(usedOldRasterizer);
 
 			fontInfo.Dispose();
-			Assert.IsTrue(fontInfo.data == null);
+			Assert.True(fontInfo.data == null);
 		}
 
-		[Test]
+		[Fact]
 		public void TestOldRasterizer()
 		{
 			var ttfData = _assembly.ReadResourceAsBytes("DroidSans.ttf");
 			var fontInfo = CreateFont(ttfData, 0);
 			Assert.NotNull(fontInfo);
-			Assert.IsTrue(fontInfo.isDataCopy);
+			Assert.True(fontInfo.isDataCopy);
 
 			fontInfo.useOldRasterizer = true;
 
 			TestRasterize(fontInfo, "Hello, World!", 32.0f);
 
-			Assert.IsTrue(usedOldRasterizer);
+			Assert.True(usedOldRasterizer);
 
 			fontInfo.Dispose();
-			Assert.IsTrue(fontInfo.data == null);
+			Assert.True(fontInfo.data == null);
 		}
 	}
 }

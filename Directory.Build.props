@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <Authors>StbTrueTypeSharpTeam</Authors>
+    <Product>StbTrueTypeSharp</Product>
+    <PackageLicenseExpression>Unlicense OR MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/StbSharp/StbTrueTypeSharp</PackageProjectUrl>
+    <Version>1.26.14</Version>
+  </PropertyGroup>
+</Project>

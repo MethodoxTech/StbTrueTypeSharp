@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <OutputType>WinExe</OutputType>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\src\StbTrueTypeSharp.csproj" />
-        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.0.1641" />
+        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.5" />
     </ItemGroup>
     <ItemGroup>
         <None Update="Fonts\DroidSans.ttf">
