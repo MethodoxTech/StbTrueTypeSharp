@@ -608,8 +608,6 @@ namespace StbTrueTypeSharp
 					stbtt_vertex* comp_verts = null;
 					stbtt_vertex* tmp = null;
 					var mtx = stackalloc float[] { 1, 0, 0, 1, 0, 0 };
-					float m = 0;
-					float n = 0;
 					flags = (ushort)ttSHORT(comp);
 					comp += 2;
 					gidx = (ushort)ttSHORT(comp);
@@ -630,6 +628,13 @@ namespace StbTrueTypeSharp
 							mtx[5] = *(sbyte*)comp;
 							comp += 1;
 						}
+					}
+					else
+					{
+						// Point matching, which this decoder does not implement -- but the arguments
+						// still have to be stepped over, or the transform that follows them is read
+						// from the wrong offset and the component lands anywhere.
+						comp += (flags & 1) != 0 ? 4 : 2;
 					}
 
 					if ((flags & (1 << 3)) != 0)
@@ -658,8 +663,17 @@ namespace StbTrueTypeSharp
 						comp += 2;
 					}
 
-					m = (float)CRuntime.sqrt(mtx[0] * mtx[0] + mtx[1] * mtx[1]);
-					n = (float)CRuntime.sqrt(mtx[2] * mtx[2] + mtx[3] * mtx[3]);
+					// A component offset is not scaled by the component's transform unless the font
+					// says so. Neither flag set means unscaled, which is what Microsoft's rasterizer
+					// does and what the fonts that omit both expect.
+					if ((flags & (1 << 11)) != 0 && (flags & (1 << 12)) == 0)
+					{
+						float dx = mtx[4];
+						float dy = mtx[5];
+						mtx[4] = mtx[0] * dx + mtx[2] * dy;
+						mtx[5] = mtx[1] * dx + mtx[3] * dy;
+					}
+
 					comp_num_verts = stbtt_GetGlyphShape(info, gidx, &comp_verts);
 					if (comp_num_verts > 0)
 					{
@@ -670,12 +684,12 @@ namespace StbTrueTypeSharp
 							short y = 0;
 							x = v->x;
 							y = v->y;
-							v->x = (short)(m * (mtx[0] * x + mtx[2] * y + mtx[4]));
-							v->y = (short)(n * (mtx[1] * x + mtx[3] * y + mtx[5]));
+							v->x = (short)(mtx[0] * x + mtx[2] * y + mtx[4]);
+							v->y = (short)(mtx[1] * x + mtx[3] * y + mtx[5]);
 							x = v->cx;
 							y = v->cy;
-							v->cx = (short)(m * (mtx[0] * x + mtx[2] * y + mtx[4]));
-							v->cy = (short)(n * (mtx[1] * x + mtx[3] * y + mtx[5]));
+							v->cx = (short)(mtx[0] * x + mtx[2] * y + mtx[4]);
+							v->cy = (short)(mtx[1] * x + mtx[3] * y + mtx[5]);
 						}
 
 						tmp = (stbtt_vertex*)CRuntime.malloc((ulong)((num_vertices + comp_num_verts) *
