@@ -1031,6 +1031,25 @@ namespace StbTrueTypeSharp
 
 		public static int stbtt_FindGlyphIndex(stbtt_fontinfo info, int unicode_codepoint)
 		{
+			var glyph = stbtt__FindGlyphIndexRaw(info, unicode_codepoint);
+			if (glyph != 0 || !info.symbolCmap)
+				return glyph;
+			// A symbol font's cmap only ever covers the private use range U+F000..U+F0FF: what used
+			// to be byte n of a codepage is now U+F000 + n. Which of the two spellings a caller
+			// arrives with depends entirely on what produced the text -- a Word document stores the
+			// character as it was typed, so 'J' in Wingdings comes through as U+004A, while a
+			// producer that already understood symbol fonts writes U+F04A -- and both must find the
+			// same glyph. The translation is attempted only after the map itself has answered
+			// nothing, so a symbol font that really does map a code point directly still wins.
+			if (unicode_codepoint >= 0x00 && unicode_codepoint <= 0xFF)
+				return stbtt__FindGlyphIndexRaw(info, 0xF000 | unicode_codepoint);
+			if (unicode_codepoint >= 0xF000 && unicode_codepoint <= 0xF0FF)
+				return stbtt__FindGlyphIndexRaw(info, unicode_codepoint & 0xFF);
+			return 0;
+		}
+
+		public static int stbtt__FindGlyphIndexRaw(stbtt_fontinfo info, int unicode_codepoint)
+		{
 			var data = info.data;
 			var index_map = (uint)info.index_map;
 			var format = ttUSHORT(data + index_map + 0);
@@ -1787,6 +1806,15 @@ namespace StbTrueTypeSharp
 			info.svg = -1;
 			numTables = ttUSHORT(data + cmap + 2);
 			info.index_map = 0;
+			info.symbolCmap = false;
+			// A "Windows Symbol" subtable (platform 3, encoding 0) is remembered separately rather
+			// than assigned to index_map directly, because the encoding records are walked in file
+			// order and a font that carries both a symbol map and a Unicode one lists them in
+			// whichever order its producer felt like. Keeping the symbol candidate out of the way
+			// until the whole table has been read is what makes the Unicode map win regardless of
+			// where it appears -- assigning both into index_map would let whichever came last in
+			// the file decide, and reading a Unicode font through its symbol map maps nothing.
+			var symbol_index_map = 0;
 			for (i = 0; i < numTables; ++i)
 			{
 				var encoding_record = (uint)(cmap + 4 + 8 * i);
@@ -1799,6 +1827,9 @@ namespace StbTrueTypeSharp
 							case STBTT_MS_EID_UNICODE_FULL:
 								info.index_map = (int)(cmap + ttULONG(data + encoding_record + 4));
 								break;
+							case STBTT_MS_EID_SYMBOL:
+								symbol_index_map = (int)(cmap + ttULONG(data + encoding_record + 4));
+								break;
 						}
 
 						break;
@@ -1808,8 +1839,23 @@ namespace StbTrueTypeSharp
 				}
 			}
 
+			// Wingdings, Webdings, Symbol and most icon fonts have no Unicode cmap whatsoever; the
+			// symbol map is the only way into their glyphs, and rejecting it means every document
+			// that uses one loses the text set in it. FreeType, HarfBuzz and Chromium all accept a
+			// symbol cmap here.
+			if (info.index_map == 0 && symbol_index_map != 0)
+			{
+				info.index_map = symbol_index_map;
+				info.symbolCmap = true;
+			}
+
+			// Returning 0, not throwing. Upstream stb_truetype reports "this face is unusable" by
+			// return value, and every caller in this library is written to that contract:
+			// CreateFont turns a 0 into a null font. An exception thrown from here instead escapes
+			// through whatever text pipeline is above it, where a face that simply needs to be
+			// skipped in favour of a fallback becomes a failure of the whole page being laid out.
 			if (info.index_map == 0)
-				throw new Exception("The font does not have a table mapping from unicode codepoints to font indices.");
+				return 0;
 			info.indexToLocFormat = ttUSHORT(data + info.head + 50);
 			return 1;
 		}

@@ -37,6 +37,23 @@ namespace StbTrueTypeSharp
 			public int numGlyphs;
 			public stbtt__buf subrs;
 			public int svg;
+
+			/// <summary>
+			///     True when the cmap subtable that was selected is a Microsoft "Windows Symbol" one,
+			///     platform 3 encoding 0 (STBTT_MS_EID_SYMBOL), rather than a Unicode one.
+			/// </summary>
+			/// <remarks>
+			///     Symbol fonts -- Wingdings, Webdings, Symbol, and most of the icon fonts that ship with
+			///     office software -- carry no Unicode cmap at all. Their only cmap maps the private use
+			///     area U+F000..U+F0FF, where U+F000 + n is the character the font was addressed by as
+			///     byte n back when it was a one-byte codepage. A document that asks such a font for 'J'
+			///     means glyph U+F04A, while a document produced by a tool that already knew about the
+			///     convention asks for U+F04A directly; both spellings occur in the wild, so
+			///     stbtt_FindGlyphIndex translates between them when this flag is set. FreeType,
+			///     HarfBuzz and Chromium all do the same thing for the same reason.
+			/// </remarks>
+			public bool symbolCmap;
+
 			public void* userdata;
 			public bool useOldRasterizer;
 
