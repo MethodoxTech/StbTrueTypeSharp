@@ -599,6 +599,7 @@ namespace StbTrueTypeSharp
 				var comp = data + g + 10;
 				num_vertices = 0;
 				vertices = null;
+				float* mtx = stackalloc float[6];
 				while (more != 0)
 				{
 					ushort flags = 0;
@@ -607,7 +608,12 @@ namespace StbTrueTypeSharp
 					var i = 0;
 					stbtt_vertex* comp_verts = null;
 					stbtt_vertex* tmp = null;
-					var mtx = stackalloc float[] { 1, 0, 0, 1, 0, 0 };
+					mtx[0] = 1;
+					mtx[1] = 0;
+					mtx[2] = 0;
+					mtx[3] = 1;
+					mtx[4] = 0;
+					mtx[5] = 0;
 					flags = (ushort)ttSHORT(comp);
 					comp += 2;
 					gidx = (ushort)ttSHORT(comp);
@@ -1514,6 +1520,7 @@ namespace StbTrueTypeSharp
 						precompute[i] = 0.0f;
 					}
 
+				float* res = stackalloc float[3];
 				for (y = iy0; y < iy1; ++y)
 					for (x = ix0; x < ix1; ++x)
 					{
@@ -1568,7 +1575,9 @@ namespace StbTrueTypeSharp
 									var by = y0 - 2 * y1 + y2;
 									var mx = x0 - sx;
 									var my = y0 - sy;
-									var res = stackalloc float[] { 0, 0, 0 };
+									res[0] = 0;
+									res[1] = 0;
+									res[2] = 0;
 									float px = 0;
 									float py = 0;
 									float t = 0;

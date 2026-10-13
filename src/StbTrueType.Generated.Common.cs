@@ -149,6 +149,10 @@ namespace StbTrueTypeSharp
 				y -= 0.01f;
 			orig[0] = x;
 			orig[1] = y;
+			float* q0 = stackalloc float[2];
+			float* q1 = stackalloc float[2];
+			float* q2 = stackalloc float[2];
+			float* hits = stackalloc float[4];
 			for (i = 0; i < nverts; ++i)
 			{
 				if (verts[i].type == STBTT_vline)
@@ -178,10 +182,6 @@ namespace StbTrueTypeSharp
 					var by = y0 < (y1 < y2 ? y2 : y1) ? y1 < y2 ? y2 : y1 : y0;
 					if (y > ay && y < by && x > ax)
 					{
-						var q0 = stackalloc float[2];
-						var q1 = stackalloc float[2];
-						var q2 = stackalloc float[2];
-						var hits = stackalloc float[4];
 						q0[0] = x0;
 						q0[1] = y0;
 						q1[0] = x1;
