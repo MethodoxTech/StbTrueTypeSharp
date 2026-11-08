@@ -1,1 +1,3 @@
+# LF everywhere, in the repository and in every working tree, as Parcel NExT keeps its own: a checkout then reads the same on every machine whatever its Git's core.autocrlf says, and a clone never shows edits nobody made.
+* text=auto eol=lf
 *.h linguist-vendored
